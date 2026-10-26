@@ -1,6 +1,6 @@
 # Slurm Ops
 
-A skills plugin for local development and Slurm operations in the current execution environment. It includes Codex integration. Other agent applications can reuse the guidance and Python helpers through adapters.
+A plugin with an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment. It includes Codex integration. Other agent applications can reuse the guidance and Python helpers through adapters.
 
 - **Local:** development, script preparation, and offline environment detection without Slurm.
 - **Helix:** local scheduler diagnostics, workflow conventions, and proportional limits on CPU, memory, and other resources for GPU jobs.
@@ -33,9 +33,27 @@ Review the bundled hooks with `/hooks` in Codex CLI. Mark the exact definitions 
 
 This package uses a local repository marketplace and manually reviewed lifecycle hooks. For the package, command, and hook formats, see [Package your plugin](https://developers.openai.com/plugins/build/plugins), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), and [Hooks](https://learn.chatgpt.com/docs/hooks).
 
+## Slurm specialist
+
+The `slurm-ops` skill delegates HPC tasks to a `slurm_ops` specialist. It passes the task, working directory, constraints, authorization, relevant job IDs, and the skill path. The specialist uses the shared operational references and helpers, owns the affected scheduler actions, and returns findings, changed files, job states, and unresolved requirements. The parent agent can continue independent work and integrate the report.
+
+The bundled definition is [agents/slurm_ops.toml](agents/slurm_ops.toml). Its discovery description covers HPC interactions broadly. Operational scope and site conventions remain in the skill references. Model settings and permissions follow the parent session.
+
+For a named agent available across projects, invoke the plugin's `setup` skill and request specialist installation. Setup copies the definition to `~/.codex/agents/slurm_ops.toml`, or `agents/slurm_ops.toml` under `CODEX_HOME` when set. A project-scoped installation uses `.codex/agents/slurm_ops.toml`. Start a new Codex session after registration. See [Codex custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents) for discovery and configuration.
+
+The plugin also supports delegation before registration: the skill passes the bundled instructions to a subagent. The specialist follows the operating guidance directly, and clients without delegation tools use it in the current context.
+
+After refreshing the plugin, run setup to update a separately installed agent definition. Setup preserves local customizations. When removing a named specialist, remove its installed `slurm_ops.toml` file as well. Keep the plugin enabled while using the specialist so its skill and helpers remain available.
+
+Example requests:
+
+- Prepare this workload for the cluster using the project's launcher.
+- Investigate this failed job and correct its execution configuration.
+- Inspect my queued jobs and explain their pending reasons.
+
 ## Use the skills and helpers
 
-Invoke the packaged `slurm-ops` skill for operational guidance or `setup` for optional configuration. The agent can also select these skills for matching tasks. Follow existing project instructions and launchers for testing and commit practices.
+Invoke the packaged `slurm-ops` skill for HPC work or `setup` for specialist registration and optional configuration. The agent can also select these skills for matching tasks. Follow existing project instructions and launchers for testing and commit practices.
 
 From the plugin checkout:
 
@@ -91,4 +109,4 @@ The Codex adapter is in `hooks/codex.py`. Shared command classification is in `s
 
 ## Project structure
 
-Shared helpers are in `slurm_ops/`. The command-line entry point is `scripts/slurm_ops.py`, and skill references are in `skills/slurm-ops/references/`. An adapter translates lifecycle and tool events from an agent application into calls to the shared logic.
+The specialist definition is in `agents/slurm_ops.toml`. Shared helpers are in `slurm_ops/`. The command-line entry point is `scripts/slurm_ops.py`, and skill references are in `skills/slurm-ops/references/`. An adapter translates lifecycle and tool events from an agent application into calls to the shared logic.

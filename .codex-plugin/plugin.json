@@ -1,6 +1,6 @@
 {
   "name": "slurm-ops",
-  "description": "Local Slurm guidance, diagnostics, and login node workload restrictions for HPC development.",
+  "description": "HPC specialist, Slurm diagnostics, and execution guidance for cluster workflows.",
   "keywords": ["slurm", "hpc", "helix", "jean-zay", "idris"],
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
@@ -11,8 +11,8 @@
   },
   "interface": {
     "displayName": "Slurm Ops",
-    "shortDescription": "Slurm guidance for Helix and Jean Zay",
-    "longDescription": "Develop locally or operate Slurm in the current execution environment. Includes Helix resource conventions, Jean Zay offline compute and storage guidance, and login node workload restrictions.",
+    "shortDescription": "HPC specialist and Slurm operations",
+    "longDescription": "Delegate HPC work to a specialist for preparing and running workloads, managing jobs and resources, diagnosing failures, and working with cluster environments, dependencies, and storage.",
     "category": "Productivity"
   }
 }

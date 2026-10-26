@@ -1,9 +1,20 @@
 ---
 name: slurm-ops
-description: Prepare, inspect, and troubleshoot single-node Slurm jobs and arrays in the current environment, with Helix and Jean Zay conventions and local development guidance. Use for HPC resource choices, launchers, queues, logs, storage, and allocation practices.
+description: >-
+  Use when interacting with HPC systems: preparing and running workloads, managing jobs and resources, diagnosing failures, or working with cluster environments, dependencies, and storage.
 ---
 
 # Slurm operations
+
+## Delegate HPC work
+
+For a task involving HPC, delegate the HPC work to the `slurm_ops` specialist. Pass the task, working directory, user constraints, existing authorization, relevant launchers and job IDs, and the absolute path to this `SKILL.md`. Give the specialist ownership of the affected scheduler actions and files while it works, then integrate its report into the broader task.
+
+Use the registered `slurm_ops` agent when available. Otherwise, read `developer_instructions` from the [bundled agent definition](../../agents/slurm_ops.toml) and include those instructions in a focused subagent task, identifying it as the Slurm Ops specialist.
+
+When already acting as the Slurm Ops specialist, follow the operating guidance below directly. Handle the task in the current context when delegation tools are unavailable or the user requests direct handling. Reading this skill during startup requires delegation only when the current task involves HPC.
+
+## Operating guidance
 
 Support single-node CPU and GPU jobs and arrays. Defer multi-node operations.
 
