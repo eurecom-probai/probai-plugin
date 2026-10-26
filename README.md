@@ -1,6 +1,6 @@
 # Slurm Ops
 
-A portable skills plugin for local development and Slurm operations in the current execution environment. It includes Codex integration. Other agent applications can reuse the guidance and Python helpers through adapters.
+A skills plugin for local development and Slurm operations in the current execution environment. It includes Codex integration. Other agent applications can reuse the guidance and Python helpers through adapters.
 
 - **Local:** development, script preparation, and offline environment detection without Slurm.
 - **Helix:** local scheduler diagnostics, workflow conventions, and proportional limits on CPU, memory, and other resources for GPU jobs.
@@ -16,7 +16,9 @@ Diagnostics and resource validation are read-only. Follow the [common workflows]
 
 ## Install in Codex
 
-The repository root is the plugin root. The root `plugin.json` follows the portable Agent Plugins layout. Codex hooks and setup are declared in `extensions.com.openai`. The repository marketplace is `.agents/plugins/marketplace.json`, named `slurm-ops-local`. Its `source.path` is `./`, relative to the repository root.
+The repository root is the plugin root. Codex loads `.codex-plugin/plugin.json`, which declares the skills, bundled hooks, and setup workflow. The repository marketplace is `.agents/plugins/marketplace.json`, named `slurm-ops-local`. Its `source.path` is `./`, relative to the repository root.
+
+This package uses the Codex compatibility layout for hook discovery. In Codex `0.164.0-alpha.11.1`, a root `plugin.json` takes precedence and produces an empty hook registry for this package, including when a compatibility manifest is also present. Keep the manifest at `.codex-plugin/plugin.json` and leave the plugin root free of a separate `plugin.json`.
 
 Use the absolute path to the checkout:
 

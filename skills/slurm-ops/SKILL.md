@@ -15,7 +15,7 @@ Read [common workflows](references/common.md) before Slurm job work and all clus
 
 ## Helper commands
 
-Resolve `<plugin-root>` from the installed skill location. It is the directory two levels above this skill directory and contains `plugin.json`. Replace the placeholder with the actual absolute path. Quote paths containing spaces.
+Resolve `<plugin-root>` from the installed skill location. It is the directory two levels above this skill directory and contains `.codex-plugin/plugin.json`. Replace the placeholder with the actual absolute path. Quote paths containing spaces.
 
 The helpers require Python 3.9 or later and its standard library.
 
