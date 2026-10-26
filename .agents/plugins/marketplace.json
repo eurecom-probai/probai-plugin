@@ -1,0 +1,20 @@
+{
+  "name": "slurm-ops-local",
+  "interface": {
+    "displayName": "Slurm Ops Local"
+  },
+  "plugins": [
+    {
+      "name": "slurm-ops",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

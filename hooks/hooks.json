@@ -1,0 +1,31 @@
+{
+  "description": "Slurm startup summary and login node workload restrictions. Review and trust the hook definitions before enabling them.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/codex.py\" --event session-start",
+            "timeout": 12,
+            "additionalContextLimit": 4096
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/codex.py\" --event pre-tool-use",
+            "timeout": 3,
+            "additionalContextLimit": 4096
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "slurm-ops",
+  "description": "Local Slurm guidance, diagnostics, and login node workload restrictions for HPC development.",
+  "keywords": ["slurm", "hpc", "helix", "jean-zay", "idris"],
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json",
+      "onboardingSkill": "./skills/setup/SKILL.md",
+      "interface": {
+        "displayName": "Slurm Ops",
+        "shortDescription": "Slurm guidance for Helix and Jean Zay",
+        "longDescription": "Develop locally or operate Slurm in the current execution environment. Includes Helix resource conventions, Jean Zay offline compute and storage guidance, and login node workload restrictions.",
+        "category": "Productivity"
+      }
+    }
+  }
+}
