@@ -20,31 +20,60 @@ The repository root is the plugin root. Codex loads `.codex-plugin/plugin.json`,
 
 This package uses the Codex compatibility layout for hook discovery. In Codex `0.164.0-alpha.11.1`, a root `plugin.json` takes precedence and produces an empty hook registry for this package, including when a compatibility manifest is also present. Keep the manifest at `.codex-plugin/plugin.json` and leave the plugin root free of a separate `plugin.json`.
 
-Use the absolute path to the checkout:
+Add the GitHub marketplace and install the plugin:
 
 ```sh
-codex plugin marketplace add /absolute/path/to/slurm_ops_plugin
+codex plugin marketplace add eurecom-probai/slurm_ops_plugin
 codex plugin add slurm-ops@slurm-ops-local
 ```
 
-Run these commands to install the plugin. Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, choose **Slurm Ops Local**, and install **Slurm Ops**. Codex loads a cached copy of the installed plugin. After changing the checkout, reinstall or refresh the local plugin and start a new session.
+Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, and choose **Slurm Ops Local** to find **Slurm Ops**. The marketplace retains the name `slurm-ops-local` for both GitHub and local installations. Codex loads a cached copy of the installed plugin.
+
+For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/slurm_ops_plugin`. To switch an existing configured source, run `codex plugin marketplace remove slurm-ops-local`, then add the desired source and install the plugin again.
+
+To refresh a GitHub installation:
+
+```sh
+codex plugin marketplace upgrade slurm-ops-local
+codex plugin add slurm-ops@slurm-ops-local
+```
+
+Start a new session after refreshing. For local development, refresh or reinstall after changing the checkout.
 
 Review the bundled hooks with `/hooks` in Codex CLI. Mark the exact definitions as trusted when enabling them, and review changed definitions again. The marketplace requires an authentication policy field. The plugin uses no connected account or service authentication.
 
-This package uses a local repository marketplace and manually reviewed lifecycle hooks. For the package, command, and hook formats, see [Package your plugin](https://developers.openai.com/plugins/build/plugins), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), and [Hooks](https://learn.chatgpt.com/docs/hooks).
+This package uses a repository marketplace and manually reviewed lifecycle hooks. For the package, command, and hook formats, see [Package your plugin](https://developers.openai.com/plugins/build/plugins), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), and [Hooks](https://learn.chatgpt.com/docs/hooks).
 
 ## Install in Claude Code
 
 The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `slurm-ops-local`. Its entry points to the repository root and exposes the existing `skills/slurm-ops` directory. Skills, references, specialist instructions, helpers, and hooks remain shared with Codex. The `setup` skill handles Codex specialist registration and stays in the Codex installation.
 
-In Claude Code, add the local checkout and install the plugin:
+In Claude Code, add the GitHub marketplace and install the plugin:
 
 ```text
-/plugin marketplace add /absolute/path/to/slurm_ops_plugin
+/plugin marketplace add eurecom-probai/slurm_ops_plugin
 /plugin install slurm-ops@slurm-ops-local
 ```
 
-Once the marketplace file is published to GitHub, users can add the repository with `/plugin marketplace add eurecom-probai/slurm_ops_plugin` and use the same install command. Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task.
+The equivalent terminal commands are:
+
+```sh
+claude plugin marketplace add eurecom-probai/slurm_ops_plugin
+claude plugin install slurm-ops@slurm-ops-local
+```
+
+Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task. GitHub installation was verified with Claude Code 2.1.317: the installed plugin exposes one skill and the `SessionStart` and `PreToolUse` hooks.
+
+For a local checkout, use `/plugin marketplace add /absolute/path/to/slurm_ops_plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove slurm-ops-local`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
+
+To refresh a GitHub installation:
+
+```text
+/plugin marketplace update slurm-ops-local
+/plugin update slurm-ops@slurm-ops-local
+```
+
+Start a new session after updating.
 
 Claude Code discovers the shared `hooks/hooks.json`. Hook commands resolve the installed path through `CLAUDE_PLUGIN_ROOT` in Claude Code and `PLUGIN_ROOT` in Codex. Review the hooks through `/hooks`. The Slurm skill delegates using the instructions in the existing TOML definition when a registered specialist is unavailable.
 
