@@ -1,6 +1,6 @@
 # Slurm Ops
 
-A plugin with an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment. It includes Codex integration. Other agent applications can reuse the guidance and Python helpers through adapters.
+A plugin for Codex and Claude Code with an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment.
 
 - **Local:** development, script preparation, and offline environment detection without Slurm.
 - **Helix:** local scheduler diagnostics, workflow conventions, and proportional limits on CPU, memory, and other resources for GPU jobs.
@@ -32,6 +32,23 @@ Run these commands to install the plugin. Start a new Codex session after instal
 Review the bundled hooks with `/hooks` in Codex CLI. Mark the exact definitions as trusted when enabling them, and review changed definitions again. The marketplace requires an authentication policy field. The plugin uses no connected account or service authentication.
 
 This package uses a local repository marketplace and manually reviewed lifecycle hooks. For the package, command, and hook formats, see [Package your plugin](https://developers.openai.com/plugins/build/plugins), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), and [Hooks](https://learn.chatgpt.com/docs/hooks).
+
+## Install in Claude Code
+
+The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `slurm-ops-local`. Its entry points to the repository root and exposes the existing `skills/slurm-ops` directory. Skills, references, specialist instructions, helpers, and hooks remain shared with Codex. The `setup` skill handles Codex specialist registration and stays in the Codex installation.
+
+In Claude Code, add the local checkout and install the plugin:
+
+```text
+/plugin marketplace add /absolute/path/to/slurm_ops_plugin
+/plugin install slurm-ops@slurm-ops-local
+```
+
+Once the marketplace file is published to GitHub, users can add the repository with `/plugin marketplace add eurecom-probai/slurm_ops_plugin` and use the same install command. Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task.
+
+Claude Code discovers the shared `hooks/hooks.json`. Hook commands resolve the installed path through `CLAUDE_PLUGIN_ROOT` in Claude Code and `PLUGIN_ROOT` in Codex. Review the hooks through `/hooks`. The Slurm skill delegates using the instructions in the existing TOML definition when a registered specialist is unavailable.
+
+See the [Claude Code marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference) for the marketplace format and the [plugin manifest reference](https://code.claude.com/docs/en/plugins-reference) for component discovery.
 
 ## Slurm specialist
 
@@ -97,12 +114,12 @@ See [examples/config.json](examples/config.json). Setup writes configuration onl
 
 ## Hook behavior and limits
 
-The Codex adapter is in `hooks/codex.py`. Shared command classification is in `slurm_ops/guard.py`.
+The shared Codex and Claude Code hook adapter is in `hooks/codex.py`. Shared command classification is in `slurm_ops/guard.py`.
 
 - `SessionStart` gathers a compact read-only snapshot through local Slurm commands for startup, resume, clear, compaction, and fork. It reports node totals, node state counts, accounts for the current user, default QoS, relevant allowed QoS limits, and queue state counts. It lists all returned partitions with their state, wall-time limit, and default status. It omits node resource profiles, individual node records, job names, and daemon configuration. Collection has a ten-second total limit and a three-second limit per command. The hook timeout is twelve seconds.
 - The snapshot reports missing commands, denied queries, timeouts, incomplete inventory, and omitted rows as limitations. Without local Slurm commands, startup produces a brief message that Slurm is unavailable. Hooks submit no jobs, install no dependencies, and change no caches.
 - The hook points to the main skill for [helper commands](skills/slurm-ops/SKILL.md#helper-commands) and reference selection.
-- `PreToolUse` matches the documented Codex `Bash` event, including unified execution. On confirmed login nodes, it denies recognized standard training and test commands. It allows lightweight diagnostics and commands that execute within an allocation.
+- `PreToolUse` matches the `Bash` event in Codex and Claude Code, including Codex unified execution. On confirmed login nodes, it denies recognized standard training and test commands. It allows lightweight diagnostics and commands that execute within an allocation.
 - Command classification recognizes simple environment prefixes, `uv run`, and `uvx`. Complex or ambiguous shell forms receive advice.
 - Project scripts receive agent review under the [execution location guidance](skills/slurm-ops/references/common.md#execution-location). Individual jobs require no registration.
 - Hook errors allow execution to continue.

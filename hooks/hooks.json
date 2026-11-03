@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/codex.py\" --event session-start",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT}}/hooks/codex.py\" --event session-start",
             "timeout": 12,
             "additionalContextLimit": 4096
           }
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/codex.py\" --event pre-tool-use",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT:-${PLUGIN_ROOT}}/hooks/codex.py\" --event pre-tool-use",
             "timeout": 3,
             "additionalContextLimit": 4096
           }
