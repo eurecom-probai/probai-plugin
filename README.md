@@ -40,13 +40,13 @@ This package uses the Codex compatibility layout for hook discovery. In Codex `0
 Add the GitHub marketplace and install the plugin:
 
 ```sh
-codex plugin marketplace add eurecom-probai/slurm_ops_plugin
+codex plugin marketplace add eurecom-probai/probai-plugin
 codex plugin add slurm-ops@probai-plugin
 ```
 
 Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, and choose **ProbAI Plugin** to find **Slurm Ops**. The marketplace retains the name `probai-plugin` for both GitHub and local installations. Codex loads a cached copy of the installed plugin.
 
-For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/slurm_ops_plugin`. To switch an existing configured source, run `codex plugin marketplace remove probai-plugin`, then add the desired source and install the plugin again.
+For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/probai-plugin`. To switch an existing configured source, run `codex plugin marketplace remove probai-plugin`, then add the desired source and install the plugin again.
 
 To refresh a GitHub installation:
 
@@ -68,20 +68,20 @@ The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `probai-
 In Claude Code, add the GitHub marketplace and install the plugin:
 
 ```text
-/plugin marketplace add eurecom-probai/slurm_ops_plugin
+/plugin marketplace add eurecom-probai/probai-plugin
 /plugin install slurm-ops@probai-plugin
 ```
 
 The equivalent terminal commands are:
 
 ```sh
-claude plugin marketplace add eurecom-probai/slurm_ops_plugin
+claude plugin marketplace add eurecom-probai/probai-plugin
 claude plugin install slurm-ops@probai-plugin
 ```
 
 Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task. GitHub installation was verified with Claude Code 2.1.317: the installed plugin exposes one skill and the `SessionStart` and `PreToolUse` hooks.
 
-For a local checkout, use `/plugin marketplace add /absolute/path/to/slurm_ops_plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove probai-plugin`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
+For a local checkout, use `/plugin marketplace add /absolute/path/to/probai-plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove probai-plugin`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
 
 To refresh a GitHub installation:
 
