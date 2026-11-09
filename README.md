@@ -8,8 +8,60 @@
 | --- | --- | --- | --- |
 | Slurm Ops (`slurm-ops`) | [Slurm operations](skills/slurm-ops/SKILL.md) | Prepare and run HPC workloads, inspect jobs and resources, and diagnose failures. | Codex and Claude Code |
 | Slurm Ops (`slurm-ops`) | [Setup](skills/setup/SKILL.md) | Install or update the Slurm specialist and configure optional local settings. | Codex |
+| Research Plots (`research-plots`) | [Research plots](plugins/research-plots/skills/research-plots/SKILL.md) | Create scientific figures with Matplotlib, Seaborn, manuscript sizing, and PDF export. | Codex and Claude Code |
 
 Each marketplace manifest lists the available plugins. Add future research-group plugins to both manifests and list their skills here. Give each plugin its own source directory and keep its skills, helpers, and hooks together.
+
+## Research Plots
+
+Research Plots creates one Python script per figure, including multi-panel figures, with a shared project-local `_config.py`. It provides ICML, ICLR, AISTATS, NeurIPS, and TMLR dimension presets, 2-inch panel rows, compact Computer Modern Sans typography, a fixed categorical palette, framed legends, and PDF export. Actual manuscript dimensions and explicit task settings take priority. The skill preserves supplied data and statistical summaries.
+
+The package lives in `plugins/research-plots`. Its skill includes a [style reference](plugins/research-plots/skills/research-plots/references/style.md), [venue measurements](plugins/research-plots/skills/research-plots/references/venues.md), a [shared configuration module](plugins/research-plots/skills/research-plots/assets/_config.py), and an adaptable [Python figure template](plugins/research-plots/skills/research-plots/assets/figure_template.py). Generated scripts require Python 3.9+, Matplotlib 3.6+, and Seaborn 0.12+. LaTeX rendering is selected automatically when `latex` is on `PATH`; native rendering reports its font fallback.
+
+After adding this marketplace, install `research-plots@probai-plugin` using `codex plugin add research-plots@probai-plugin` in Codex or `/plugin install research-plots@probai-plugin` in Claude Code. Start a new session and invoke `$research-plots` in Codex or `/research-plots:research-plots` in Claude Code, or describe a scientific plotting task. The plugin provides skills, a shared configuration module, and a figure template; it has no hooks, connected service, or automatic dependency installation.
+
+### Shared configuration
+
+Keep `_config.py` alongside the figure scripts. It contains the palette, rcParams, and font selection. Venue dimensions are documented in the reference and set directly in each script. Each script controls its data, figure size, panel arrangement, labels, and local overrides. Importing the configuration performs no style setup; call `plot_config.configure_style()` inside `plt.rc_context()` before creating the figure, then apply local rcParams directly.
+
+```text
+figures/
+  _config.py
+  learning_curves.py
+  cost_scatter.py
+```
+
+Use the packaged configuration as a starting point for common project defaults. Keep each figure script specific to its data and layout, with minimal custom functions. The template and examples use one `main()` per figure. The scripts and their shared configuration run independently of the installed plugin.
+
+### Example figures
+
+These examples use deterministic synthetic data to illustrate the plotting style. The scripts import the adjacent [shared configuration](plugins/research-plots/examples/_config.py) and declare their Python dependencies inline for `uv`. Keep `_config.py` alongside them when copying the examples. Both select LaTeX when `latex` is on `PATH` and otherwise use native Matplotlib text.
+
+**Learning curves:** two panels at the ICML/AISTATS full width of 6.75 inches, with a 2-inch panel row and extra space for a shared framed legend. Sparse markers distinguish methods. The shaded bands have analytically specified widths for illustration.
+
+![Synthetic learning curves in two panels with shaded bands and a shared framed legend](plugins/research-plots/examples/learning_curves.png)
+
+[Python script](plugins/research-plots/examples/learning_curves.py) · [PDF](plugins/research-plots/examples/learning_curves.pdf)
+
+**Cost and error:** a 3.25 × 2-inch single-column scatter plot with seeded observations, consistent method colors, and distinct marker shapes. The framed legend uses opaque markers for readability.
+
+![Synthetic compute cost versus prediction error, with three colored marker groups and a framed legend](plugins/research-plots/examples/cost_scatter.png)
+
+[Python script](plugins/research-plots/examples/cost_scatter.py) · [PDF](plugins/research-plots/examples/cost_scatter.pdf)
+
+Regenerate the PDFs from the repository root:
+
+```sh
+uv run plugins/research-plots/examples/learning_curves.py
+uv run plugins/research-plots/examples/cost_scatter.py
+```
+
+The scripts save PDFs beside their source files. The README previews are rasterized from those PDFs. To refresh the previews with Poppler installed:
+
+```sh
+pdftoppm -singlefile -png -r 180 plugins/research-plots/examples/learning_curves.pdf plugins/research-plots/examples/learning_curves
+pdftoppm -singlefile -png -r 180 plugins/research-plots/examples/cost_scatter.pdf plugins/research-plots/examples/cost_scatter
+```
 
 ## Slurm Ops
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Research Plots"
+  short_description: "Scientific figures with Matplotlib and Seaborn"
+  default_prompt: "Use $research-plots to create a publication figure and its Python script with shared project configuration."
+policy:
+  allow_implicit_invocation: true

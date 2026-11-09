@@ -1,0 +1,14 @@
+{
+  "name": "research-plots",
+  "version": "0.1.0",
+  "description": "Scientific figures with Matplotlib, Seaborn, document-aware sizing, and automatic LaTeX rendering.",
+  "author": {"name": "EURECOM ProbAI"},
+  "keywords": ["research", "plots", "matplotlib", "seaborn", "latex"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Research Plots",
+    "shortDescription": "Publication figures with Matplotlib and Seaborn",
+    "longDescription": "Create figure scripts with shared project configuration with compact typography, venue presets, consistent colors, framed legends, and PDF export.",
+    "category": "Productivity"
+  }
+}
