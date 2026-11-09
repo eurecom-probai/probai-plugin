@@ -1,7 +1,7 @@
 {
-  "name": "slurm-ops-local",
+  "name": "probai-plugin",
   "interface": {
-    "displayName": "Slurm Ops Local"
+    "displayName": "ProbAI Plugin"
   },
   "plugins": [
     {

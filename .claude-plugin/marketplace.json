@@ -1,10 +1,10 @@
 {
-  "name": "slurm-ops-local",
+  "name": "probai-plugin",
   "owner": {
     "name": "EURECOM ProbAI"
   },
   "metadata": {
-    "description": "Slurm Ops skills and helpers for HPC workflows."
+    "description": "Skills and plugins for the EURECOM ProbAI research group."
   },
   "plugins": [
     {

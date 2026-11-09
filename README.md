@@ -1,6 +1,19 @@
-# Slurm Ops
+# ProbAI Plugin Marketplace
 
-A plugin for Codex and Claude Code with an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment.
+`probai-plugin` is the EURECOM ProbAI research group's marketplace for reusable skills and plugins in Codex and Claude Code.
+
+## Skills catalog
+
+| Plugin | Skill | Purpose | Availability |
+| --- | --- | --- | --- |
+| Slurm Ops (`slurm-ops`) | [Slurm operations](skills/slurm-ops/SKILL.md) | Prepare and run HPC workloads, inspect jobs and resources, and diagnose failures. | Codex and Claude Code |
+| Slurm Ops (`slurm-ops`) | [Setup](skills/setup/SKILL.md) | Install or update the Slurm specialist and configure optional local settings. | Codex |
+
+Each marketplace manifest lists the available plugins. Add future research-group plugins to both manifests and list their skills here. Give each plugin its own source directory and keep its skills, helpers, and hooks together.
+
+## Slurm Ops
+
+Slurm Ops provides an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment.
 
 - **Local:** development, script preparation, and offline environment detection without Slurm.
 - **Helix:** local scheduler diagnostics, workflow conventions, and proportional limits on CPU, memory, and other resources for GPU jobs.
@@ -14,9 +27,13 @@ The helpers inspect the current environment and validate resource requests. On a
 
 Diagnostics and resource validation are read-only. Follow the [common workflows](skills/slurm-ops/references/common.md) for launchers, job authorization, and uncertain submissions.
 
+## Existing installations
+
+The marketplace was previously named `slurm-ops-local`. Remove that marketplace registration in your client, then add the marketplace and install `slurm-ops@probai-plugin` using the instructions below. In Codex, use `codex plugin marketplace remove slurm-ops-local`; in Claude Code, use `/plugin marketplace remove slurm-ops-local`. Marketplace removal may also remove installed plugins, so reinstall Slurm Ops under the new name.
+
 ## Install in Codex
 
-The repository root is the plugin root. Codex loads `.codex-plugin/plugin.json`, which declares the skills, bundled hooks, and setup workflow. The repository marketplace is `.agents/plugins/marketplace.json`, named `slurm-ops-local`. Its `source.path` is `./`, relative to the repository root.
+The repository root is the plugin root. Codex loads `.codex-plugin/plugin.json`, which declares the skills, bundled hooks, and setup workflow. The repository marketplace is `.agents/plugins/marketplace.json`, named `probai-plugin`. Its `source.path` is `./`, relative to the repository root.
 
 This package uses the Codex compatibility layout for hook discovery. In Codex `0.164.0-alpha.11.1`, a root `plugin.json` takes precedence and produces an empty hook registry for this package, including when a compatibility manifest is also present. Keep the manifest at `.codex-plugin/plugin.json` and leave the plugin root free of a separate `plugin.json`.
 
@@ -24,18 +41,18 @@ Add the GitHub marketplace and install the plugin:
 
 ```sh
 codex plugin marketplace add eurecom-probai/slurm_ops_plugin
-codex plugin add slurm-ops@slurm-ops-local
+codex plugin add slurm-ops@probai-plugin
 ```
 
-Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, and choose **Slurm Ops Local** to find **Slurm Ops**. The marketplace retains the name `slurm-ops-local` for both GitHub and local installations. Codex loads a cached copy of the installed plugin.
+Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, and choose **ProbAI Plugin** to find **Slurm Ops**. The marketplace retains the name `probai-plugin` for both GitHub and local installations. Codex loads a cached copy of the installed plugin.
 
-For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/slurm_ops_plugin`. To switch an existing configured source, run `codex plugin marketplace remove slurm-ops-local`, then add the desired source and install the plugin again.
+For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/slurm_ops_plugin`. To switch an existing configured source, run `codex plugin marketplace remove probai-plugin`, then add the desired source and install the plugin again.
 
 To refresh a GitHub installation:
 
 ```sh
-codex plugin marketplace upgrade slurm-ops-local
-codex plugin add slurm-ops@slurm-ops-local
+codex plugin marketplace upgrade probai-plugin
+codex plugin add slurm-ops@probai-plugin
 ```
 
 Start a new session after refreshing. For local development, refresh or reinstall after changing the checkout.
@@ -46,31 +63,31 @@ This package uses a repository marketplace and manually reviewed lifecycle hooks
 
 ## Install in Claude Code
 
-The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `slurm-ops-local`. Its entry points to the repository root and exposes the existing `skills/slurm-ops` directory. Skills, references, specialist instructions, helpers, and hooks remain shared with Codex. The `setup` skill handles Codex specialist registration and stays in the Codex installation.
+The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `probai-plugin`. Its entry points to the repository root and exposes the existing `skills/slurm-ops` directory. Skills, references, specialist instructions, helpers, and hooks remain shared with Codex. The `setup` skill handles Codex specialist registration and stays in the Codex installation.
 
 In Claude Code, add the GitHub marketplace and install the plugin:
 
 ```text
 /plugin marketplace add eurecom-probai/slurm_ops_plugin
-/plugin install slurm-ops@slurm-ops-local
+/plugin install slurm-ops@probai-plugin
 ```
 
 The equivalent terminal commands are:
 
 ```sh
 claude plugin marketplace add eurecom-probai/slurm_ops_plugin
-claude plugin install slurm-ops@slurm-ops-local
+claude plugin install slurm-ops@probai-plugin
 ```
 
 Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task. GitHub installation was verified with Claude Code 2.1.317: the installed plugin exposes one skill and the `SessionStart` and `PreToolUse` hooks.
 
-For a local checkout, use `/plugin marketplace add /absolute/path/to/slurm_ops_plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove slurm-ops-local`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
+For a local checkout, use `/plugin marketplace add /absolute/path/to/slurm_ops_plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove probai-plugin`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
 
 To refresh a GitHub installation:
 
 ```text
-/plugin marketplace update slurm-ops-local
-/plugin update slurm-ops@slurm-ops-local
+/plugin marketplace update probai-plugin
+/plugin update slurm-ops@probai-plugin
 ```
 
 Start a new session after updating.
