@@ -20,21 +20,26 @@ Consider MIG slices, L40S, and full GPUs available in the current Helix inventor
 
 ## Strict proportional resource ceiling
 
-For each GPU job, let `k` be the number of requested allocatable GPU resources and `N` the **configured total allocatable GPU capacity of the node**, regardless of idle resources. Limit requests for CPUs, host memory, and other node resources to the fraction `k/N` of configured node capacity:
+For each GPU job, compute the requested accelerator weight `w` and the configured total allocatable accelerator weight `W` on each eligible node, including busy resources. Limit CPUs, host memory, and other node resources to the fraction `w/W` of configured node capacity:
 
-- CPUs: at most `floor(configured CPUs × k/N)` across the whole job.
-- Host memory: at most `floor(configured memory × k/N)`, rounded down to the scheduler request unit.
-- Other requested node resources: at most the same `k/N` share, with indivisible units rounded down.
+- CPUs: at most `floor(configured CPUs × w/W)` across the whole job.
+- Host memory: at most `floor(configured memory × w/W)`, rounded down to the scheduler request unit.
+- Other requested node resources: at most the same `w/W` share, with indivisible units rounded down.
 
-Count MIG instances equally regardless of slice size. Build one allocatable instance inventory without counting backing GPUs, generic and typed TRES aliases, or alternative descriptions more than once. If the inventory is unclear, resolve it before submission.
+For H200 inventories, weight a full GPU by 7 compute slices and an `ng` MIG profile by `n`: `1g.18gb` and `1g.35gb` each contribute 1, `2g.35gb` contributes 2, `3g.71gb` contributes 3, and `4g.71gb` contributes 4. These weights allocate host resources according to GPU compute slices. The profile's memory suffix identifies GPU memory capacity and remains part of the exact requested type.
+
+Sum weights over the configured allocatable GRES inventory. Count each instance once; exclude backing GPUs, generic and typed TRES aliases, and alternative descriptions. For homogeneous inventories the share reduces to the requested instance count divided by the configured instance count. Mixed inventories require explicit requested types and known weights for every configured type. Resolve unknown profiles or ambiguous inventories before submission.
 
 Apply the ceiling to total effective requests after launcher settings, environment variables, scheduler defaults, and scheduler adjustments. `--mem=0`, whole-node allocation, or exclusive requests are invalid when they exceed the proportional share.
 
 For heterogeneous eligible nodes, use the most restrictive per-resource ceiling across all eligible nodes. Narrow eligibility with justified constraints if needed. Resolve unknown capacities, eligibility, defaults, or request semantics before submitting. For CPU-only jobs, follow the [resource preparation guidance](common.md#prepare-and-run).
 
-Example: `k=2`, `N=8`, 128 configured CPUs, and 524288 MiB configured memory permit at most **32 CPUs and 131072 MiB** (128 GiB). Apply this ceiling when preparing, reviewing, and submitting through every launcher. Use the [resource validation helper](resource-preflight.md) for normalized inventory and request JSON.
+Example: two full GPUs out of eight give `w/W=2/8`. A node with 128 configured CPUs and 524288 MiB configured memory permits at most **32 CPUs and 131072 MiB** (128 GiB). Apply this ceiling when preparing, reviewing, and submitting through every launcher. Use the [resource validation helper](resource-preflight.md) for normalized inventory and request JSON.
 
 ## Typed GPU example
 
 Example full H200 request: `--gpus=h200:1`.
 
+## Verified profile example
+
+Scheduler inspection on 12 November 2026 reported `helix03` with 128 CPUs, 1024000 MiB host memory, and these configured H200 NVL profiles: ten `1g.35gb`, four `4g.71gb`, four `3g.71gb`, and twelve `1g.18gb`. Its total allocatable compute weight is `10 + 16 + 12 + 12 = 50`. One `h200_nvl_4g.71gb` instance therefore permits at most 10 CPUs and 81920 MiB host memory (`4/50` of the node). One `h200_nvl_1g.35gb` instance permits 2 CPUs and 20480 MiB (`1/50`). Refresh the inventory and evaluate every eligible node before submission.

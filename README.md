@@ -192,7 +192,7 @@ For Jean Zay, read the [site reference](skills/slurm-ops/references/jean-zay.md)
 
 ### Helix resource validation
 
-The offline validator compares the effective job request with configured node capacities under the Helix proportional resource limits. The [resource validation reference](skills/slurm-ops/references/resource-preflight.md) contains the command, JSON schema, exit codes, and normalization requirements.
+The offline validator compares the effective job request with configured node capacities under the Helix proportional resource limits, weighting mixed H200 MIG profiles by their compute slices. The [resource validation reference](skills/slurm-ops/references/resource-preflight.md) contains the command, JSON schema, exit codes, and normalization requirements.
 
 ## Optional configuration
 

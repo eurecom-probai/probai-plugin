@@ -1,7 +1,9 @@
 """Evaluate normalized, single-node Helix GPU requests without side effects.
 
 ``evaluate_request(nodes, request)`` uses configured node capacities.
-``gpu_instances`` is a normalized count of allocatable GPU/MIG instances.
+``gpu_instances`` counts allocatable devices; ``gpu_types`` records profiles.
+Mixed H200 inventories use compute-slice weights (full GPU: 7, ng profile: n).
+Count-only inventories assert homogeneous resources.
 Callers must resolve GRES aliases and overlapping GPU and MIG descriptions.
 A missing count remains unknown. All resource quantities are integer counts
 (memory in MiB).
@@ -29,6 +31,7 @@ request), ``unresolved`` (unknown resource values or scheduler settings), and
 information.
 """
 
+import re
 from typing import Any, Dict, List, Optional
 
 
@@ -36,14 +39,28 @@ def _integer(value: Any, minimum: int = 0) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value >= minimum
 
 
+def gpu_profile_units(kind: str) -> Optional[int]:
+    """Return H200 compute-slice units; a full H200 has seven units."""
+    if kind in ("h200", "h200_nvl"):
+        return 7
+    match = re.fullmatch(r"h200(?:_nvl)?_([1-7])g\.\d+gb", kind)
+    return int(match.group(1)) if match else None
+
+
+def _typed_counts(value: Any) -> bool:
+    return (isinstance(value, dict) and bool(value)
+            and all(isinstance(key, str) and key and _integer(count, 1)
+                    for key, count in value.items()))
+
+
 def evaluate_request(nodes: List[dict], request: dict) -> dict:
     """Return a JSON-serializable assessment of proportional resource limits.
 
     ``nodes`` must contain every node eligible for the request, including busy
     nodes. Each has ``name``, ``cpus``, ``memory_mib``, ``gpu_instances``, and
-    optionally ``other_resources``. Every requested other resource must have a
-    configured count on each eligible node. The caller determines eligibility
-    and normalizes launcher and scheduler settings. The function evaluates
+    optionally ``gpu_types`` and ``other_resources``. Every requested other
+    resource must have a configured count on each eligible node. The caller
+    determines eligibility and normalizes launcher and scheduler settings. The function evaluates
     resource limits offline.
     """
     invalid: List[str] = []
@@ -77,10 +94,19 @@ def evaluate_request(nodes: List[dict], request: dict) -> dict:
 
     supported = {"gpus", "cpus", "ntasks", "cpus_per_task", "memory_mib",
                  "mem_per_cpu_mib", "mem_per_gpu_mib", "defaults", "nodes",
-                 "exclusive", "all_memory", "other_resources"}
+                 "exclusive", "all_memory", "other_resources", "gpu_types"}
     unknown = sorted(str(key) for key in request if key not in supported)
     if unknown:
         unresolved.append("Unnormalized request fields need review: " + ", ".join(unknown) + ".")
+
+    requested_types = request.get("gpu_types")
+    if requested_types is not None:
+        if not _typed_counts(requested_types):
+            invalid.append("Requested gpu_types must map type names to positive integer counts.")
+            requested_types = None
+        elif sum(requested_types.values()) != k:
+            invalid.append("Requested gpu_types counts must sum to gpus.")
+    effective["gpu_types"] = requested_types
 
     node_count = request.get("nodes", 1)
     effective["nodes"] = node_count
@@ -193,11 +219,14 @@ def evaluate_request(nodes: List[dict], request: dict) -> dict:
     capacity_keys = ["cpus", "memory_mib"]
     limits: Dict[str, List[int]] = {key: [] for key in capacity_keys}
     other_limits: Dict[str, List[int]] = {key: [] for key in effective["other_resources"]}
+    shares = []
     for index, node in enumerate(nodes):
         if not isinstance(node, dict):
             unresolved.append("Eligible node %d is malformed." % index)
             continue
         name = node.get("name") or "node[%d]" % index
+        if node.get("issues"):
+            unresolved.append("Resolve scheduler inventory issues for %s before validation." % name)
         n = node.get("gpu_instances")
         if not _integer(n):
             unresolved.append("Resolve the configured GPU/MIG instance count for %s." % name)
@@ -206,33 +235,68 @@ def evaluate_request(nodes: List[dict], request: dict) -> dict:
             invalid.append("%s has %d configured GPU/MIG instances, fewer than the requested %d." % (name, n, k))
         if n == 0:
             continue
-        if k < n:
+        numerator, denominator = k, n
+        types = node.get("gpu_types")
+        if types is not None:
+            if not _typed_counts(types) or sum(types.values()) != n:
+                unresolved.append("For %s, reconcile gpu_types with gpu_instances." % name)
+                continue
+            selected = requested_types
+            if selected is None:
+                if len(types) == 1:
+                    selected = {next(iter(types)): k}
+                else:
+                    unresolved.append("For %s, specify requested gpu_types for its mixed inventory." % name)
+                    continue
+            for kind, count in selected.items():
+                if count > types.get(kind, 0):
+                    invalid.append("%s has insufficient configured instances of %s." % (name, kind))
+            # Homogeneous types have equal shares even when their profile is unknown.
+            if len(types) > 1:
+                units = {kind: gpu_profile_units(kind) for kind in types}
+                if any(value is None for value in units.values()):
+                    unresolved.append("For %s, resolve compute weights for every GPU profile." % name)
+                    continue
+                if any(kind not in units for kind in selected):
+                    continue
+                numerator = sum(count * units[kind] for kind, count in selected.items())
+                denominator = sum(count * units[kind] for kind, count in types.items())
+        elif requested_types is not None:
+            unresolved.append("For %s, provide gpu_types to verify the typed request." % name)
+            continue
+        shares.append({"node": name, "requested_units": numerator,
+                       "configured_units": denominator})
+        if numerator < denominator:
             if effective["exclusive"]:
-                invalid.append("Exclusive allocation on %s exceeds the %d/%d resource share." % (name, k, n))
+                invalid.append("Exclusive allocation on %s exceeds the %d/%d resource share." %
+                               (name, numerator, denominator))
             if effective["all_memory"]:
-                invalid.append("All-node memory on %s exceeds the %d/%d memory share." % (name, k, n))
+                invalid.append("All-node memory on %s exceeds the %d/%d memory share." %
+                               (name, numerator, denominator))
         for key in capacity_keys:
             capacity = node.get(key)
             if not _integer(capacity, 1):
                 unresolved.append("For %s, resolve the configured %s capacity." % (name, key))
                 continue
-            ceiling = capacity * k // n
+            ceiling = capacity * numerator // denominator
             limits[key].append(ceiling)
             amount = effective[key]
             if amount is not None and amount > ceiling:
                 invalid.append("Requested %s=%d exceeds the limit on %s: %d/%d share with a ceiling of %d." %
-                               (key, amount, name, k, n, ceiling))
+                               (key, amount, name, numerator, denominator, ceiling))
         node_other = node.get("other_resources", {})
         for resource, amount in effective["other_resources"].items():
             capacity = node_other.get(resource) if isinstance(node_other, dict) else None
             if not _integer(capacity):
                 unresolved.append("For %s, resolve the configured %s capacity." % (name, resource))
                 continue
-            ceiling = capacity * k // n
+            ceiling = capacity * numerator // denominator
             other_limits[resource].append(ceiling)
             if amount > ceiling:
                 invalid.append("Requested %s=%d exceeds the limit on %s: %d/%d share with a ceiling of %d." %
-                               (resource, amount, name, k, n, ceiling))
+                               (resource, amount, name, numerator, denominator, ceiling))
+
+    ceilings["gpu_shares"] = shares
 
     # Global ceilings require complete data for every eligible node.
     # Known violations take precedence over missing information.

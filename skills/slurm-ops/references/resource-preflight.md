@@ -24,9 +24,10 @@ The inventory object requires `complete: true` and a `nodes` list of objects wit
 | `cpus` | Configured CPU capacity as a positive integer. |
 | `memory_mib` | Configured host-memory capacity in integer MiB. |
 | `gpu_instances` | Configured allocatable GPU or MIG instance count, including busy instances. |
+| `gpu_types` | Object mapping exact scheduler GPU/MIG type names to positive integer configured counts. Counts must sum to `gpu_instances`. Required for mixed inventories and typed requests. |
 | `other_resources` | Optional object mapping other resource names to configured integer counts. |
 
-The `inspect` helper provides normalized node evidence. Its `complete` field describes a successfully parsed node listing. Filter and verify that listing for job eligibility, and resolve aliases or MIG ambiguity before asserting a complete eligible inventory. Build the eligible-node inventory from detailed scheduler records and refresh them before submission.
+The `inspect` helper provides normalized node evidence, including `gpu_types`. Resolve all reported node `issues`; the validator treats them as unresolved. Count-only inventories assert homogeneous accelerators. Provide profile counts for every mixed inventory. The `inspect` result’s `complete` field describes a successfully parsed node listing. Filter and verify that listing for job eligibility, and resolve aliases or MIG ambiguity before asserting a complete eligible inventory. Build the eligible-node inventory from detailed scheduler records and refresh them before submission.
 
 ## Effective request
 
@@ -35,6 +36,7 @@ Normalize the effective request from the actual launcher before validation. Incl
 | Request field | Meaning |
 | --- | --- |
 | `gpus` | Requested allocatable GPU or MIG count. Required. Zero produces `not_applicable`. |
+| `gpu_types` | Object mapping exact requested scheduler GPU/MIG type names to positive integer counts summing to `gpus`. Required when an eligible node has mixed types. |
 | `cpus` | Total requested CPUs. Mutually exclusive with explicit task CPU fields. |
 | `ntasks`, `cpus_per_task` | Alternative CPU form: the total is their product. Both effective values must be known. |
 | `memory_mib` | Total requested host memory in MiB. Zero means all-node memory. |
@@ -54,6 +56,18 @@ If explicit CPU values are absent, `defaults` can contain `cpus`, or `ntasks` an
 - `def_mem_per_gpu_mib`: memory multiplied by requested GPUs.
 
 Provide defaults only after establishing their actual effective values.
+
+## MIG profiles
+
+The validator weights mixed H200 inventories by compute slices: `h200` and `h200_nvl` have weight 7; `h200_` and `h200_nvl_` MIG names ending in `ng.<memory>gb` have weight `n` (1 through 7). Other mixed GPU families require additional weight support and return `unresolved`. Homogeneous inventories use the instance-count ratio. Requested profile counts must fit on every supplied eligible node. Select eligible nodes before validation; retain every configured profile on each selected node when computing the denominator.
+
+For the verified `helix03` inventory in the [Helix reference](helix.md#verified-profile-example), a normalized request is:
+
+```json
+{"gpus": 1, "gpu_types": {"h200_nvl_4g.71gb": 1}, "cpus": 10, "memory_mib": 81920}
+```
+
+`ceilings.gpu_shares` reports each evaluated node's requested and configured units. Equal-type inventories use instance units; mixed H200 inventories use compute-slice units. GPU-memory capacity and current free instances remain separate placement and workload considerations.
 
 ## Results and limits
 
