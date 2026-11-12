@@ -1,6 +1,6 @@
 # Resource validation
 
-Use the offline `validate-resources` helper to validate a normalized single-node GPU request against [the Helix proportional resource ceiling](helix.md#strict-proportional-resource-ceiling). Follow [scheduler discovery](common.md#discover-before-requesting) and [job authorization](common.md#prepare-and-run) for submission.
+Always run the offline `validate-resources` helper when preparing, reviewing, or submitting a Helix GPU job through any launcher. Validate the normalized effective single-node GPU request against [the Helix proportional resource ceiling](helix.md#strict-proportional-resource-ceiling), using the complete eligible-node inventory and GPU/MIG profile counts. Require a `valid` result before submission, and rerun the check whenever the effective request or eligible-node inventory changes. Follow [scheduler discovery](common.md#discover-before-requesting) and [job authorization](common.md#prepare-and-run) for submission.
 
 ## Invocation
 

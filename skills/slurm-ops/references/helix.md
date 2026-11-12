@@ -20,6 +20,8 @@ Consider MIG slices, L40S, and full GPUs available in the current Helix inventor
 
 ## Strict proportional resource ceiling
 
+Always run the [`validate-resources` helper](resource-preflight.md) when preparing, reviewing, or submitting a Helix GPU job through any launcher. Supply the normalized effective request and the complete eligible-node inventory, including GPU/MIG profile counts. Require a `valid` result before submission. Rerun the check whenever the effective request or eligible-node inventory changes.
+
 For each GPU job, compute the requested accelerator weight `w` and the configured total allocatable accelerator weight `W` on each eligible node, including busy resources. Limit CPUs, host memory, and other node resources to the fraction `w/W` of configured node capacity:
 
 - CPUs: at most `floor(configured CPUs × w/W)` across the whole job.
@@ -34,7 +36,7 @@ Apply the ceiling to total effective requests after launcher settings, environme
 
 For heterogeneous eligible nodes, use the most restrictive per-resource ceiling across all eligible nodes. Narrow eligibility with justified constraints if needed. Resolve unknown capacities, eligibility, defaults, or request semantics before submitting. For CPU-only jobs, follow the [resource preparation guidance](common.md#prepare-and-run).
 
-Example: two full GPUs out of eight give `w/W=2/8`. A node with 128 configured CPUs and 524288 MiB configured memory permits at most **32 CPUs and 131072 MiB** (128 GiB). Apply this ceiling when preparing, reviewing, and submitting through every launcher. Use the [resource validation helper](resource-preflight.md) for normalized inventory and request JSON.
+Example: two full GPUs out of eight give `w/W=2/8`. A node with 128 configured CPUs and 524288 MiB configured memory permits at most **32 CPUs and 131072 MiB** (128 GiB).
 
 ## Typed GPU example
 
