@@ -1,71 +1,53 @@
-# ProbAI Plugin Marketplace
+<h1 align="center">ProbAI Plugin Marketplace</h1>
 
-`probai-plugin` is the EURECOM ProbAI research group's marketplace for reusable skills and plugins in Codex and Claude Code.
+<p align="center">
+  EURECOM ProbAI tools for running Slurm workloads and preparing scientific figures.
+</p>
 
-## Skills catalog
+<p align="center">
+  <a href="#install-in-codex"><img alt="Install in Codex" src="https://img.shields.io/badge/Install-Codex-243447?style=flat"></a>
+  <a href="#install-in-claude-code"><img alt="Install in Claude Code" src="https://img.shields.io/badge/Install-Claude%20Code-984725?style=flat"></a>
+</p>
 
-| Plugin | Skill | Purpose | Availability |
-| --- | --- | --- | --- |
-| Slurm Ops (`slurm-ops`) | [Slurm operations](skills/slurm-ops/SKILL.md) | Prepare and run HPC workloads, inspect jobs and resources, and diagnose failures. | Codex and Claude Code |
-| Slurm Ops (`slurm-ops`) | [Setup](skills/setup/SKILL.md) | Install or update the Slurm specialist and configure optional local settings. | Codex |
-| Research Plots (`research-plots`) | [Research plots](plugins/research-plots/skills/research-plots/SKILL.md) | Create scientific figures with Matplotlib, Seaborn, manuscript sizing, and PDF export. | Codex and Claude Code |
+## Installation
 
-Each marketplace manifest lists the available plugins. Add future research-group plugins to both manifests and list their skills here. Give each plugin its own source directory and keep its skills, helpers, and hooks together.
+Add the marketplace once, then run the install command for each plugin you want. Choose `slurm-ops` for cluster jobs or `research-plots` for manuscript figures. Start a new session after installation.
 
-## Research Plots
+### Install in Codex
 
-Research Plots creates one Python script per figure, including multi-panel figures, with a shared project-local `_config.py`. It provides ICML, ICLR, AISTATS, NeurIPS, and TMLR dimension presets, 2-inch panel rows, compact Computer Modern Sans typography, a fixed categorical palette, framed legends, and PDF export. Actual manuscript dimensions and explicit task settings take priority. The skill preserves supplied data and statistical summaries.
+Run these commands in your terminal.
 
-The package lives in `plugins/research-plots`. Its skill includes a [style reference](plugins/research-plots/skills/research-plots/references/style.md), [venue measurements](plugins/research-plots/skills/research-plots/references/venues.md), a [shared configuration module](plugins/research-plots/skills/research-plots/assets/_config.py), and an adaptable [Python figure template](plugins/research-plots/skills/research-plots/assets/figure_template.py). Generated scripts require Python 3.9+, Matplotlib 3.6+, and Seaborn 0.12+. LaTeX rendering is selected automatically when `latex` is on `PATH`; native rendering reports its font fallback.
+```sh
+codex plugin marketplace add eurecom-probai/probai-plugin
+codex plugin add slurm-ops@probai-plugin
+codex plugin add research-plots@probai-plugin
+```
 
-After adding this marketplace, install `research-plots@probai-plugin` using `codex plugin add research-plots@probai-plugin` in Codex or `/plugin install research-plots@probai-plugin` in Claude Code. Start a new session and invoke `$research-plots` in Codex or `/research-plots:research-plots` in Claude Code, or describe a scientific plotting task. The plugin provides skills, a shared configuration module, and a figure template; it has no hooks, connected service, or automatic dependency installation.
+### Install in Claude Code
 
-### Shared configuration
-
-Keep `_config.py` alongside the figure scripts. It contains the palette, rcParams, and font selection. Venue dimensions are documented in the reference and set directly in each script. Each script controls its data, figure size, panel arrangement, labels, and local overrides. Importing the configuration performs no style setup; call `plot_config.configure_style()` inside `plt.rc_context()` before creating the figure, then apply local rcParams directly.
+Run these commands inside Claude Code.
 
 ```text
-figures/
-  _config.py
-  learning_curves.py
-  cost_scatter.py
+/plugin marketplace add eurecom-probai/probai-plugin
+/plugin install slurm-ops@probai-plugin
+/plugin install research-plots@probai-plugin
 ```
 
-Use the packaged configuration as a starting point for common project defaults. Keep each figure script specific to its data and layout, with minimal custom functions. The template and examples use one `main()` per figure. The scripts and their shared configuration run independently of the installed plugin.
+For Slurm Ops, review the bundled hooks with `/hooks` before enabling them. In Codex CLI, trust the definitions you reviewed and review them again after changes. See [hook behavior and limits](#hook-behavior-and-limits).
 
-### Example figures
+## Skills
 
-These examples use deterministic synthetic data to illustrate the plotting style. The scripts import the adjacent [shared configuration](plugins/research-plots/examples/_config.py) and declare their Python dependencies inline for `uv`. Keep `_config.py` alongside them when copying the examples. Both select LaTeX when `latex` is on `PATH` and otherwise use native Matplotlib text.
+Describe the task in a new session or invoke a skill by name.
 
-**Learning curves:** two panels at the ICML/AISTATS full width of 6.75 inches, with a 2-inch panel row and extra space for a shared framed legend. Sparse markers distinguish methods. The shaded bands have analytically specified widths for illustration.
+| Task | Skill | Codex | Claude Code |
+| --- | --- | --- | --- |
+| Prepare a job, inspect the queue, or diagnose a failure | [Slurm Ops](#slurm-ops) | `$slurm-ops` | `/slurm-ops:slurm-ops` |
+| Prepare a manuscript figure | [Research Plots](#research-plots) | `$research-plots` | `/research-plots:research-plots` |
+| Register or update the Slurm specialist | [Setup](#slurm-specialist) | `$setup` | Codex only |
 
-![Synthetic learning curves in two panels with shaded bands and a shared framed legend](plugins/research-plots/examples/learning_curves.png)
+### Slurm Ops
 
-[Python script](plugins/research-plots/examples/learning_curves.py) · [PDF](plugins/research-plots/examples/learning_curves.pdf)
-
-**Cost and error:** a 3.25 × 2-inch single-column scatter plot with seeded observations, consistent method colors, and distinct marker shapes. The framed legend uses opaque markers for readability.
-
-![Synthetic compute cost versus prediction error, with three colored marker groups and a framed legend](plugins/research-plots/examples/cost_scatter.png)
-
-[Python script](plugins/research-plots/examples/cost_scatter.py) · [PDF](plugins/research-plots/examples/cost_scatter.pdf)
-
-Regenerate the PDFs from the repository root:
-
-```sh
-uv run plugins/research-plots/examples/learning_curves.py
-uv run plugins/research-plots/examples/cost_scatter.py
-```
-
-The scripts save PDFs beside their source files. The README previews are rasterized from those PDFs. To refresh the previews with Poppler installed:
-
-```sh
-pdftoppm -singlefile -png -r 180 plugins/research-plots/examples/learning_curves.pdf plugins/research-plots/examples/learning_curves
-pdftoppm -singlefile -png -r 180 plugins/research-plots/examples/cost_scatter.pdf plugins/research-plots/examples/cost_scatter
-```
-
-## Slurm Ops
-
-Slurm Ops provides an HPC specialist, reusable skills, and Python helpers for local development and Slurm operations in the current execution environment.
+Try “Inspect my queued jobs and explain why they are pending.” The [Slurm skill](skills/slurm-ops/SKILL.md) uses the scheduler and project launcher available in the current environment.
 
 - **Local:** development, script preparation, and offline environment detection without Slurm.
 - **Helix:** local scheduler diagnostics, workflow conventions, and proportional limits on CPU, memory, and other resources for GPU jobs.
@@ -73,102 +55,52 @@ Slurm Ops provides an HPC specialist, reusable skills, and Python helpers for lo
 
 The plugin supports single-node CPU or GPU jobs and arrays of single-node jobs on macOS and Linux with Python 3.9 or later. The helpers use only the standard library. The plugin has no MCP service, background monitor, automatic synchronization, or dependency installation.
 
-## Execution environment
+### Research Plots
+
+Ask for a figure at its intended publication size, for example, “Plot prediction error against training observations in two panels at ICML full width. Use the supplied uncertainty bands.”
+
+The skill produces one editable script per figure and exports a PDF. Scripts can share fonts, colors, and legend settings through a local `_config.py`. Manuscript dimensions take precedence over the ICML, ICLR, AISTATS, NeurIPS, and TMLR presets. See the [plotting skill](plugins/research-plots/skills/research-plots/SKILL.md), [venue dimensions](plugins/research-plots/skills/research-plots/references/venues.md), and [figure template](plugins/research-plots/skills/research-plots/assets/figure_template.py).
+
+#### Example figures
+
+Both examples use synthetic data and declare their dependencies inline for `uv`. Keep the [shared configuration](plugins/research-plots/examples/_config.py) beside the scripts when copying them. They use LaTeX when available and otherwise use native Matplotlib text.
+
+| Example | Layout | Files |
+| --- | --- | --- |
+| Learning curves | Two panels at full manuscript width with illustrative shaded bands | [Python](plugins/research-plots/examples/learning_curves.py) · [PDF](plugins/research-plots/examples/learning_curves.pdf) |
+| Compute cost and prediction error | Single-column scatter plot with three method groups | [Python](plugins/research-plots/examples/cost_scatter.py) · [PDF](plugins/research-plots/examples/cost_scatter.pdf) |
+
+Run either script from the repository root to save its PDF beside the source file.
+
+```sh
+uv run plugins/research-plots/examples/learning_curves.py
+uv run plugins/research-plots/examples/cost_scatter.py
+```
+
+## Agents
+
+### Slurm specialist
+
+The Slurm Ops skill delegates cluster work to the `slurm_ops` specialist when delegation is available. For example, ask “Investigate why this job failed and suggest a change to the launcher.” The specialist inspects the job and its logs, then reports its findings and any changes. It inherits the parent session’s permissions and model settings. Before registration, the skill can use the bundled specialist instructions. Clients without delegation tools follow those instructions in the current session.
+
+**Register a named specialist in Codex.** Invoke `$setup` and ask “Install the Slurm specialist for this project” or “Install the Slurm specialist for all my projects.” Start a new Codex session after registration.
+
+| Scope | Installed agent definition |
+| --- | --- |
+| Current project | `.codex/agents/slurm_ops.toml` in the project |
+| All projects | `agents/slurm_ops.toml` under `CODEX_HOME`, which defaults to `~/.codex` |
+
+Keep the plugin enabled so the specialist can use its skills and helpers. After a plugin update, run setup again to update the registered definition and preserve local customizations. To remove the named specialist, delete its installed definition. See the [setup skill](skills/setup/SKILL.md) and [bundled agent definition](agents/slurm_ops.toml).
+
+## Slurm Ops reference
+
+### Execution environment
 
 The helpers inspect the current environment and validate resource requests. On a workstation, they support local development and offline script preparation. On a cluster, they use locally available Slurm commands.
 
 Diagnostics and resource validation are read-only. Follow the [common workflows](skills/slurm-ops/references/common.md) for launchers, job authorization, and uncertain submissions.
 
-## Existing installations
-
-The marketplace was previously named `slurm-ops-local`. Remove that marketplace registration in your client, then add the marketplace and install `slurm-ops@probai-plugin` using the instructions below. In Codex, use `codex plugin marketplace remove slurm-ops-local`; in Claude Code, use `/plugin marketplace remove slurm-ops-local`. Marketplace removal may also remove installed plugins, so reinstall Slurm Ops under the new name.
-
-## Install in Codex
-
-The repository root is the plugin root. Codex loads `.codex-plugin/plugin.json`, which declares the skills, bundled hooks, and setup workflow. The repository marketplace is `.agents/plugins/marketplace.json`, named `probai-plugin`. Its `source.path` is `./`, relative to the repository root.
-
-This package uses the Codex compatibility layout for hook discovery. In Codex `0.164.0-alpha.11.1`, a root `plugin.json` takes precedence and produces an empty hook registry for this package, including when a compatibility manifest is also present. Keep the manifest at `.codex-plugin/plugin.json` and leave the plugin root free of a separate `plugin.json`.
-
-Add the GitHub marketplace and install the plugin:
-
-```sh
-codex plugin marketplace add eurecom-probai/probai-plugin
-codex plugin add slurm-ops@probai-plugin
-```
-
-Start a new Codex session after installation. In the desktop app, restart if needed, open Plugins, and choose **ProbAI Plugin** to find **Slurm Ops**. The marketplace retains the name `probai-plugin` for both GitHub and local installations. Codex loads a cached copy of the installed plugin.
-
-For a local checkout, replace the first command with `codex plugin marketplace add /absolute/path/to/probai-plugin`. To switch an existing configured source, run `codex plugin marketplace remove probai-plugin`, then add the desired source and install the plugin again.
-
-To refresh a GitHub installation:
-
-```sh
-codex plugin marketplace upgrade probai-plugin
-codex plugin add slurm-ops@probai-plugin
-```
-
-Start a new session after refreshing. For local development, refresh or reinstall after changing the checkout.
-
-Review the bundled hooks with `/hooks` in Codex CLI. Mark the exact definitions as trusted when enabling them, and review changed definitions again. The marketplace requires an authentication policy field. The plugin uses no connected account or service authentication.
-
-This package uses a repository marketplace and manually reviewed lifecycle hooks. For the package, command, and hook formats, see [Package your plugin](https://developers.openai.com/plugins/build/plugins), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), and [Hooks](https://learn.chatgpt.com/docs/hooks).
-
-## Install in Claude Code
-
-The Claude Code marketplace is `.claude-plugin/marketplace.json`, named `probai-plugin`. Its entry points to the repository root and exposes the existing `skills/slurm-ops` directory. Skills, references, specialist instructions, helpers, and hooks remain shared with Codex. The `setup` skill handles Codex specialist registration and stays in the Codex installation.
-
-In Claude Code, add the GitHub marketplace and install the plugin:
-
-```text
-/plugin marketplace add eurecom-probai/probai-plugin
-/plugin install slurm-ops@probai-plugin
-```
-
-The equivalent terminal commands are:
-
-```sh
-claude plugin marketplace add eurecom-probai/probai-plugin
-claude plugin install slurm-ops@probai-plugin
-```
-
-Start a new Claude Code session after installation, then invoke `/slurm-ops:slurm-ops` or describe an HPC task. GitHub installation was verified with Claude Code 2.1.317: the installed plugin exposes one skill and the `SessionStart` and `PreToolUse` hooks.
-
-For a local checkout, use `/plugin marketplace add /absolute/path/to/probai-plugin` instead. When switching from a local checkout to GitHub, first run `/plugin marketplace remove probai-plugin`, then run the GitHub add and install commands above. Claude requires the registered marketplace source to match its saved settings. Removing the marketplace also uninstalls its plugins.
-
-To refresh a GitHub installation:
-
-```text
-/plugin marketplace update probai-plugin
-/plugin update slurm-ops@probai-plugin
-```
-
-Start a new session after updating.
-
-Claude Code discovers the shared `hooks/hooks.json`. Hook commands resolve the installed path through `CLAUDE_PLUGIN_ROOT` in Claude Code and `PLUGIN_ROOT` in Codex. Review the hooks through `/hooks`. The Slurm skill delegates using the instructions in the existing TOML definition when a registered specialist is unavailable.
-
-See the [Claude Code marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference) for the marketplace format and the [plugin manifest reference](https://code.claude.com/docs/en/plugins-reference) for component discovery.
-
-## Slurm specialist
-
-The `slurm-ops` skill delegates HPC tasks to a `slurm_ops` specialist. It passes the task, working directory, constraints, authorization, relevant job IDs, and the skill path. The specialist uses the shared operational references and helpers, owns the affected scheduler actions, and returns findings, changed files, job states, and unresolved requirements. The parent agent can continue independent work and integrate the report.
-
-The bundled definition is [agents/slurm_ops.toml](agents/slurm_ops.toml). Its discovery description covers HPC interactions broadly. Operational scope and site conventions remain in the skill references. Model settings and permissions follow the parent session.
-
-For a named agent available across projects, invoke the plugin's `setup` skill and request specialist installation. Setup copies the definition to `~/.codex/agents/slurm_ops.toml`, or `agents/slurm_ops.toml` under `CODEX_HOME` when set. A project-scoped installation uses `.codex/agents/slurm_ops.toml`. Start a new Codex session after registration. See [Codex custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents) for discovery and configuration.
-
-The plugin also supports delegation before registration: the skill passes the bundled instructions to a subagent. The specialist follows the operating guidance directly, and clients without delegation tools use it in the current context.
-
-After refreshing the plugin, run setup to update a separately installed agent definition. Setup preserves local customizations. When removing a named specialist, remove its installed `slurm_ops.toml` file as well. Keep the plugin enabled while using the specialist so its skill and helpers remain available.
-
-Example requests:
-
-- Prepare this workload for the cluster using the project's launcher.
-- Investigate this failed job and correct its execution configuration.
-- Inspect my queued jobs and explain their pending reasons.
-
-## Use the skills and helpers
-
-Invoke the packaged `slurm-ops` skill for HPC work or `setup` for specialist registration and optional configuration. The agent can also select these skills for matching tasks. Follow existing project instructions and launchers for testing and commit practices.
+### Command-line helpers
 
 From the plugin checkout:
 
@@ -194,9 +126,7 @@ For Jean Zay, read the [site reference](skills/slurm-ops/references/jean-zay.md)
 
 The offline validator compares the effective job request with configured node capacities under the Helix proportional resource limits, weighting mixed H200 MIG profiles by their compute slices. The [resource validation reference](skills/slurm-ops/references/resource-preflight.md) contains the command, JSON schema, exit codes, and normalization requirements.
 
-## Optional configuration
-
-Configuration is optional:
+### Optional configuration
 
 - User defaults: `$XDG_CONFIG_HOME/slurm-ops/config.json`, or `~/.config/slurm-ops/config.json` when `XDG_CONFIG_HOME` is unset.
 - Project overrides: the nearest `.slurm-ops.json` in the current directory or an ancestor directory. Discovery also works outside Git repositories.
@@ -210,7 +140,7 @@ Explicit helper input takes precedence over project hints. Project hints overrid
 
 See [examples/config.json](examples/config.json). Setup writes configuration only when requested. Keep personal paths and accounts in local configuration. Never store credentials in the package. The site, execution role, and execution environment come from local observations.
 
-## Hook behavior and limits
+### Hook behavior and limits
 
 The shared Codex and Claude Code hook adapter is in `hooks/codex.py`. Shared command classification is in `slurm_ops/guard.py`.
 
@@ -222,6 +152,19 @@ The shared Codex and Claude Code hook adapter is in `hooks/codex.py`. Shared com
 - Project scripts receive agent review under the [execution location guidance](skills/slurm-ops/references/common.md#execution-location). Individual jobs require no registration.
 - Hook errors allow execution to continue.
 
-## Project structure
+## Update or switch installations
 
-The specialist definition is in `agents/slurm_ops.toml`. Shared helpers are in `slurm_ops/`. The command-line entry point is `scripts/slurm_ops.py`, and skill references are in `skills/slurm-ops/references/`. An adapter translates lifecycle and tool events from an agent application into calls to the shared logic.
+| Client | Refresh the marketplace | Update an installed plugin |
+| --- | --- | --- |
+| Codex CLI | `codex plugin marketplace upgrade probai-plugin` | `codex plugin add slurm-ops@probai-plugin` |
+| Claude Code | `/plugin marketplace update probai-plugin` | `/plugin update slurm-ops@probai-plugin` |
+
+For Research Plots, replace `slurm-ops` with `research-plots` in the update command. Start a new session after updating.
+
+To install from a local checkout, use its absolute path in the marketplace add command. When switching sources, remove the existing registration first with `codex plugin marketplace remove probai-plugin` or `/plugin marketplace remove probai-plugin`. If you used the former marketplace name, remove `slurm-ops-local` instead. Add the new source and reinstall the plugins you use.
+
+## Marketplace maintenance
+
+Register each plugin in the [Codex marketplace](.agents/plugins/marketplace.json) and the [Claude Code marketplace](.claude-plugin/marketplace.json). Slurm Ops lives at the repository root. Research Plots has its own [plugin directory](plugins/research-plots).
+
+Keep the Slurm Ops manifest at `.codex-plugin/plugin.json`. In Codex `0.164.0-alpha.11.1`, adding a separate root `plugin.json` causes hook discovery to return an empty registry. Both clients use the [shared hook definitions](hooks/hooks.json).
